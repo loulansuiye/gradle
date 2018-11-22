@@ -19,6 +19,8 @@ import com.android.builder.model.AndroidProject;
 import org.gradle.api.Action;
 import org.gradle.tooling.BuildActionExecuter;
 import org.gradle.tooling.ProjectConnection;
+import org.gradle.tooling.events.ProgressEvent;
+import org.gradle.tooling.events.ProgressListener;
 
 import java.util.Map;
 
@@ -35,6 +37,7 @@ public class SyncAction {
         modelBuilder.setStandardOutput(System.out);
         modelBuilder.setStandardError(System.err);
         modelBuilder.forTasks("generateDebugSources");
+        modelBuilder.addProgressListener(noOpListener());
         modelBuilder.withArguments("-Dcom.android.build.gradle.overrideVersionCheck=true",
             "-Pandroid.injected.build.model.only=true",
             "-Pandroid.injected.build.model.only.versioned=3",
@@ -55,5 +58,14 @@ public class SyncAction {
         new Inspector().inspectModel(models);
         syncTimer.stop();
         System.out.println("Sync took " + syncTimer.duration());
+    }
+
+    private static ProgressListener noOpListener() {
+        return new ProgressListener() {
+            @Override
+            public void statusChanged(ProgressEvent event) {
+                // ProgressEvents are not built using reflective proxies so we don't need to inspect them
+            }
+        };
     }
 }
